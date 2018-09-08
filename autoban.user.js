@@ -1,29 +1,56 @@
 // ==UserScript==
 // @name         block 'drop' in steam.tv
-// @version      1.1
+// @version      1.2
 // @description  block noob!
 // @author       xz
 // @include      *://steam.tv/*
 // @grant        none
-// @namespace https://greasyfork.org/users/48754
 // ==/UserScript==
 
 (function() {
     'use strict';
+    //auto report spam user, maybe steam will ban u
+    var AutoReport=false;
+
     if(typeof CBroadcastChat !== 'undefined'){
-        console.log("find CBroadcastChat!");
+        console.log("script has loaded! AutoReport is "+(AutoReport?"on":"off"));
         CBroadcastChat.prototype.DisplayChatMessage = function( strPersonaName, bInGame, steamID, strMessage, bLocal )
         {
             var _chat = this;
-
-            var elMessage = $J('#ChatMessageTemplate').clone();
-            //--  :)
-	   if(strMessage.search(/^!drop|^!box/i)>-1){
-                console.log(strPersonaName,steamID,strMessage);
-                //this.MuteUserForSession(elMessage.data( 'steamid' ),strPersonaName);
-                return 0;
+            if(strMessage.search(/^!|drop$|box$|(\w)\1{4,}/i)>-1){
+                console.log("%s(%s)\t\t%s",steamID,strPersonaName,strMessage);
+                if ( !this.m_mapMutedUsers[steamID] && AutoReport)
+                    //this.MuteUserForSession(steamID,strPersonaName);
+                {
+                    this.m_mapMutedUsers[steamID] = strPersonaName;
+                    var rgParams =
+                        {
+                            chat_id: this.m_ulChatID,
+                            user_steamid: steamID,
+                            muted: 1
+                        };
+                    this.m_webapi.ExecJSONP( 'IBroadcastService', 'MuteBroadcastChatUser', rgParams, true, null, 15 )
+                        .done( function()
+                              {
+                        return 0;
+                    })
+                        .fail( function()
+                              {
+                        if (bOwner)
+                        {
+                            console.log('Failed to mute %s. Please try again.'.replace( /%s/, strPersonaName ) );
+                            delete _chat.m_mapMutedUsers[steamID];
+                            return 0;
+                        }
+                    });
+                    console.log("auto reported user: "+this.GetMutedUsers().length);
+                    return 0;
+                }else{
+                    return 0;
+                }
+                //console.log(this.IsUserMutedLocally(steamID));
             }
-            //--
+            var elMessage = $J('#ChatMessageTemplate').clone();
             elMessage.attr( 'id', '' );
             elMessage.attr( 'data-steamid', steamID );
 
