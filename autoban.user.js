@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         block 'drop' in steam.tv
-// @version      1.2
+// @version      1.4
 // @description  block noob!
 // @author       xz
 // @include      *://steam.tv/*
@@ -12,14 +12,16 @@
     //auto report spam user, maybe steam will ban u
     var AutoReport=false;
 
+    var lastMessage={};
+
     if(typeof CBroadcastChat !== 'undefined'){
         console.log("script has loaded! AutoReport is "+(AutoReport?"on":"off"));
         CBroadcastChat.prototype.DisplayChatMessage = function( strPersonaName, bInGame, steamID, strMessage, bLocal )
         {
             var _chat = this;
-            if(strMessage.search(/^!|drop$|box$|(\w)\1{4,}/i)>-1){
+            if(lastMessage[steamID]===strMessage||strMessage.search(/^!|drop$|box$|(\w)\1{4,}|^(\u02d0.*?\u02d0)\2{4,}|^\u02d0(\w)*\u02d0$|^.$|tradeoffer\/new/i)>-1){
                 console.log("%s(%s)\t\t%s",steamID,strPersonaName,strMessage);
-                if ( !this.m_mapMutedUsers[steamID] && AutoReport)
+                if ( AutoReport && !this.m_mapMutedUsers[steamID])
                     //this.MuteUserForSession(steamID,strPersonaName);
                 {
                     this.m_mapMutedUsers[steamID] = strPersonaName;
@@ -50,6 +52,7 @@
                 }
                 //console.log(this.IsUserMutedLocally(steamID));
             }
+            lastMessage[steamID]=strMessage;
             var elMessage = $J('#ChatMessageTemplate').clone();
             elMessage.attr( 'id', '' );
             elMessage.attr( 'data-steamid', steamID );
