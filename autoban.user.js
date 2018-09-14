@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         block 'drop' in steam.tv
-// @version      1.4
+// @version      1.4.1
 // @description  block noob!
 // @author       xz
 // @include      *://steam.tv/*
@@ -20,7 +20,7 @@
         {
             var _chat = this;
             if(lastMessage[steamID]===strMessage||strMessage.search(/^!|drop$|box$|(\w)\1{4,}|^(\u02d0.*?\u02d0)\2{4,}|^\u02d0(\w)*\u02d0$|^.$|tradeoffer\/new/i)>-1){
-                console.log("%s(%s)\t\t%s",steamID,strPersonaName,strMessage);
+                console.log("%s(%s)\t\t%s%s",steamID,strPersonaName,strMessage,lastMessage[steamID]===strMessage?"(Multiple identical messages)":"");
                 if ( AutoReport && !this.m_mapMutedUsers[steamID])
                     //this.MuteUserForSession(steamID,strPersonaName);
                 {
